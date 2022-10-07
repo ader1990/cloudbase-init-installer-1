@@ -179,6 +179,11 @@ function PipInstall($package, $allow_dev=$false, $update=$false)
 }
 
 function SetVCVars($version="2019", $platform="x86_amd64") {
+
+    Write-Host $env:Path
+    Write-Host $(& "C:\Program Files\Git\usr\bin\printenv.exe")
+    & "C:\Program Files\Git\usr\bin\printenv.exe"
+    
     pushd "$ENV:ProgramFiles (x86)\Microsoft Visual Studio\$version\Enterprise\VC\Auxiliary\Build"
     try {
         cmd /c "vcvarsall.bat $platform & set" |
@@ -191,6 +196,9 @@ function SetVCVars($version="2019", $platform="x86_amd64") {
     finally {
         popd
     }
+    Write-Host $env:Path
+    Write-Host $(& "C:\Program Files\Git\usr\bin\printenv.exe")
+    & "C:\Program Files\Git\usr\bin\printenv.exe"
 }
 
 function ReplaceVSToolSet($toolset)

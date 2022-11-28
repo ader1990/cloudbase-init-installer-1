@@ -27,7 +27,7 @@ function GitClonePull($path, $url, $branch="master")
 
     if (!(Test-Path -path $path))
     {
-        git clone -b $branch $url
+        git clone -b $branch $url $path
         if ($LastExitCode) { throw "git clone failed" }
         $needspull = $false
     }
@@ -178,11 +178,14 @@ function PipInstall($package, $allow_dev=$false, $update=$false)
     if ($LastExitCode) { throw "pip install $dev failed on package: $package" }
 }
 
-function SetVCVars($version="14.0", $platform="x86_amd64")
-{
-    pushd "$ENV:ProgramFiles (x86)\Microsoft Visual Studio $version\VC\"
-    try
-    {
+function SetVCVars($version="2019", $platform="x86_amd64") {
+
+    Write-Host $env:Path
+    Write-Host $(& "C:\Program Files\Git\usr\bin\printenv.exe")
+    & "C:\Program Files\Git\usr\bin\printenv.exe"
+    
+    pushd "$ENV:ProgramFiles (x86)\Microsoft Visual Studio\$version\Enterprise\VC\Auxiliary\Build"
+    try {
         cmd /c "vcvarsall.bat $platform & set" |
         foreach {
           if ($_ -match "=") {
@@ -190,10 +193,12 @@ function SetVCVars($version="14.0", $platform="x86_amd64")
           }
         }
     }
-    finally
-    {
+    finally {
         popd
     }
+    Write-Host $env:Path
+    Write-Host $(& "C:\Program Files\Git\usr\bin\printenv.exe")
+    & "C:\Program Files\Git\usr\bin\printenv.exe"
 }
 
 function ReplaceVSToolSet($toolset)
@@ -203,6 +208,16 @@ function ReplaceVSToolSet($toolset)
         $vcxprojfile = $_.FullName
         (Get-Content $vcxprojfile) |
         Foreach-Object {$_ -replace "<PlatformToolset>[^<]+</PlatformToolset>", "<PlatformToolset>$toolset</PlatformToolset>"} |
+        Set-Content $vcxprojfile
+    }
+}
+
+function Replace-WixToolSet($toolset) {
+    Get-ChildItem -Filter *.vcxproj -Recurse |
+    Foreach-Object {
+        $vcxprojfile = $_.FullName
+        (Get-Content $vcxprojfile) |
+        Foreach-Object {$_ -replace '\$\(WIX\)sdk\\[^<]+\\', ('$(WIX)sdk\{0}\' -f $toolset)} |
         Set-Content $vcxprojfile
     }
 }

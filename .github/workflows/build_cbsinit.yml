@@ -1,0 +1,35 @@
+name: Cloudbase-Init build MSI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: windows-2019
+    strategy:
+      max-parallel: 100
+      matrix:
+        cbsinit_repo: ['https://github.com/cloudbase/cloudbase-init']
+        cbsinit_branch: ['master']
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+    - name: Install Windows 8.1 SDK
+      run: |
+        Invoke-WebRequest -Method Get -Uri https://go.microsoft.com/fwlink/p/?LinkId=323507 -OutFile sdksetup.exe -UseBasicParsing
+        Start-Process -Wait sdksetup.exe -ArgumentList "/q", "/norestart", "/features", "OptionId.WindowsDesktopSoftwareDevelopmentKit", "OptionId.NetFxSoftwareDevelopmentKit"
+      shell: powershell
+    - name: Build msi
+      shell: cmd
+      run: 
+        powershell.exe .\BuildAutomation\BuildCloudbaseInitSetup.ps1 ^
+            -ClonePullInstallerRepo:$false -CreateZip:$false ^
+            -PythonVersion "3.10" ^
+            -SetVCEnvVars:$true -RelativePythonDirPath:$true ^
+            -CloudbaseInitRepoUrl ${{ matrix.cbsinit_repo }} -CloudbaseInitRepoBranch ${{ matrix.cbsinit_branch }}
+    - uses: actions/upload-artifact@v1
+      with:
+        name: "CloudbaseInit_x64_MSI_${{ matrix.cbsinit_branch }}"
+        path: 'CloudbaseInitSetup/bin/release/x64/CloudbaseInitSetup.msi'

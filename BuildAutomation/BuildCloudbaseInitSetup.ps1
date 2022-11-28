@@ -4,13 +4,17 @@ Param(
   [string]$SignX509Thumbprint = $null,
   [string]$release = $null,
   # Cloudbase-Init repo details
-  [string]$CloudbaseInitRepoUrl = "https://github.com/cloudbase/cloudbase-init.git",
+  [string]$CloudbaseInitRepoUrl = "https://github.com/openstack/cloudbase-init.git",
   [string]$CloudbaseInitRepoBranch = "master",
   # Use an already available installer or clone a new one.
   [switch]$ClonePullInstallerRepo = $true,
   [string]$InstallerDir = $null,
   [string]$VSRedistDir = "${ENV:ProgramFiles(x86)}\Common Files\Merge Modules",
-  [string]$SignTimestampUrl = "http://timestamp.digicert.com?alg=sha256"
+  [switch]$CreateZip=$true,
+  [switch]$SetVCEnvVars=$true,
+  [switch]$RelativePythonDirPath,
+  [string]$VSPlatformToolSet="v141",
+  [string]$WixPlatformToolSet="VS2019"
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,18 +22,29 @@ $ErrorActionPreference = "Stop"
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 . "$scriptPath\BuildUtils.ps1"
 
-SetVCVars
+SetVCVars "2019" "x86_amd64"
+
+
+# Use v140 with GitHub workflows env
+ReplaceVSToolSet $VSPlatformToolSet
+# Use VS2015 with GitHub workflows env
+#Replace-WixToolSet $WixPlatformToolSet
 
 # Needed for SSH
 $ENV:HOME = $ENV:USERPROFILE
 
 $python_dir = "C:\Python_CloudbaseInit"
+$basepath = "C:\OpenStack\build\cloudbase-init"
+
+if ($RelativePythonDirPath) {
+    $python_dir = Join-Path $scriptPath "Python_CloudbaseInit"
+    $basepath = Join-path $scriptPath "build\cloudbase-init"
+}
 
 $ENV:PATH = "$python_dir\;$python_dir\scripts;$ENV:PATH"
 $ENV:PATH += ";$ENV:ProgramFiles (x86)\Git\bin\"
 $ENV:PATH += ";$ENV:ProgramFiles\7-zip\"
 
-$basepath = "C:\build\cloudbase-init"
 CheckDir $basepath
 
 pushd .
@@ -70,6 +85,8 @@ try
     $python_template_dir = join-path $cloudbaseInitInstallerDir "Python$($pythonversion.replace('.', ''))_${platform}_Template"
 
     CheckCopyDir $python_template_dir $python_dir
+    
+    ls "${python_dir}"
 
     # Make sure that we don't have temp files from a previous build
     $python_build_path = "$ENV:LOCALAPPDATA\Temp\pip_build_$ENV:USERNAME"
@@ -79,9 +96,8 @@ try
 
     ExecRetry { PipInstall "pip" -update $true }
     ExecRetry { PipInstall "wheel" -update $true }
-    ExecRetry { PipInstall "setuptools" -update $true }
 
-    ExecRetry { PullInstall "requirements" "https://github.com/openstack/requirements" }
+    ExecRetry { PullInstall "requirements" "https://github.com/openstack/requirements" "stable/wallaby"}
     $upper_constraints_file = $(Resolve-Path ".\requirements\upper-constraints.txt").Path
     $env:PIP_CONSTRAINT = $upper_constraints_file
     $env:PIP_NO_BINARIES = "cloudbase-init"
@@ -95,32 +111,34 @@ try
         ExecRetry { PullInstall "cloudbase-init" $CloudbaseInitRepoUrl $CloudbaseInitRepoBranch }
     }
 
-    $release_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform"
-    $bin_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\Binaries\$platform"
+    if ($CreateZip) {
+        $release_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform"
+        $bin_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\Binaries\$platform"
 
-    $zip_content_dir = join-path $release_dir "zip_content"
-    CheckRemoveDir $zip_content_dir
-    mkdir $zip_content_dir
+        $zip_content_dir = join-path $release_dir "zip_content"
+        CheckRemoveDir $zip_content_dir
+        mkdir $zip_content_dir
 
-    $python_dir_release = join-path $zip_content_dir "Python"
-    $bin_dir_release = join-path $zip_content_dir "Bin"
+        $python_dir_release = join-path $zip_content_dir "Python"
+        $bin_dir_release = join-path $zip_content_dir "Bin"
 
-    CheckCopyDir $python_dir $python_dir_release
-    CheckCopyDir $bin_dir $bin_dir_release
+        CheckCopyDir $python_dir $python_dir_release
+        CheckCopyDir $bin_dir $bin_dir_release
 
-    $zip_path = join-path $release_dir "CloudbaseInitSetup.zip"
-    if (Test-Path $zip_path) {
-        del $zip_path
-    }
+        $zip_path = join-path $release_dir "CloudbaseInitSetup.zip"
+        if (Test-Path $zip_path) {
+            del $zip_path
+        }
 
-    pushd $zip_content_dir
-    try
-    {
-        CreateZip $zip_path *
-    }
-    finally
-    {
-        popd
+        pushd $zip_content_dir
+        try
+        {
+            CreateZip $zip_path *
+        }
+        finally
+        {
+            popd
+        }
     }
 
     $version = &"$python_dir\python.exe" -c "from cloudbaseinit import version; print(version.get_version())"
@@ -152,17 +170,21 @@ try
     }
 
     cd $cloudbaseInitInstallerDir
-
-    &msbuild CloudbaseInitSetup.sln /m /p:Platform=$platform /p:Configuration=`"Release`"  /p:DefineConstants=`"PythonSourcePath=$python_dir`;CarbonSourcePath=Carbon`;Version=$msi_version`;VersionStr=$version`"
+    
+    & msbuild.exe CloudbaseInitSetup.sln /m /p:Platform=$platform /p:Configuration=`"Release`"  /p:DefineConstants=`"PythonSourcePath=$python_dir`;CarbonSourcePath=Carbon`;Version=$msi_version`;VersionStr=$version`"
     if ($LastExitCode) { throw "MSBuild failed" }
 
     $msi_path = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform\CloudbaseInitSetup.msi"
+    $msi_path_pdb_path = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform\CloudbaseInitSetup.wixpdb"
+
+    Write-Host ("Cloudbaseinit MSI path is ${0}" -f $msi_path)
+    Remove-Item -Path $msi_path_pdb_path -Force -ErrorAction SilentlyContinue
 
     if($SignX509Thumbprint)
     {
         ExecRetry {
             Write-Host "Signing MSI with certificate: $SignX509Thumbprint"
-            signtool.exe sign /sha1 $SignX509Thumbprint /tr $SignTimestampUrl /td SHA256 /v $msi_path
+            signtool.exe sign /sha1 $SignX509Thumbprint /t http://timestamp.verisign.com/scripts/timstamp.dll /v $msi_path
             if ($LastExitCode) { throw "signtool failed" }
         }
     }

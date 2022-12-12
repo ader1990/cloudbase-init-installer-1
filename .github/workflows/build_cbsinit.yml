@@ -31,5 +31,5 @@ jobs:
             -CloudbaseInitRepoUrl ${{ matrix.cbsinit_repo }} -CloudbaseInitRepoBranch ${{ matrix.cbsinit_branch }}
     - uses: actions/upload-artifact@v1
       with:
-        name: "CloudbaseInit_x64_MSI_${{ matrix.cbsinit_branch }}"
+        name: "CloudbaseInit_x64_MSI_${{ matrix.cbsinit_branch }}" 
         path: 'CloudbaseInitSetup/bin/release/x64/CloudbaseInitSetup.msi'

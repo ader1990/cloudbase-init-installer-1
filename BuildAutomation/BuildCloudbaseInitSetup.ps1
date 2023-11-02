@@ -97,8 +97,8 @@ try
     ExecRetry { PipInstall "wheel" -update $true }
     ExecRetry { PipInstall "setuptools" -update $true }
 
-    DownloadFile "https://raw.githubusercontent.com/ader1990/requirements/stable-zed-with-pyyaml601/upper-constraints.txt" "$pwd\upper-constraints.txt"^M
-    $upper_constraints_file = $(Resolve-Path ".\upper-constraints.txt").Path^M
+    DownloadFile "https://raw.githubusercontent.com/ader1990/requirements/stable-zed-with-pyyaml601/upper-constraints.txt" "$pwd\upper-constraints.txt"
+    $upper_constraints_file = $(Resolve-Path ".\upper-constraints.txt").Path
 
     ExecRetry { GitClonePull "requirements" "https://github.com/openstack/requirements" "stable-zed-with-pyyaml601"}
     $upper_constraints_file = $(Resolve-Path ".\requirements\upper-constraints.txt").Path

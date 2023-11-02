@@ -95,8 +95,12 @@ try
 
     ExecRetry { PipInstall "pip" -update $true }
     ExecRetry { PipInstall "wheel" -update $true }
+    ExecRetry { PipInstall "setuptools" -update $true }
 
-    ExecRetry { PullInstall "requirements" "https://github.com/openstack/requirements" "stable/zed"}
+    DownloadFile "https://raw.githubusercontent.com/ader1990/requirements/stable-zed-with-pyyaml601/upper-constraints.txt" "$pwd\upper-constraints.txt"^M
+    $upper_constraints_file = $(Resolve-Path ".\upper-constraints.txt").Path^M
+
+    ExecRetry { GitClonePull "requirements" "https://github.com/openstack/requirements" "stable-zed-with-pyyaml601"}
     $upper_constraints_file = $(Resolve-Path ".\requirements\upper-constraints.txt").Path
     $env:PIP_CONSTRAINT = $upper_constraints_file
     $env:PIP_NO_BINARIES = "cloudbase-init"

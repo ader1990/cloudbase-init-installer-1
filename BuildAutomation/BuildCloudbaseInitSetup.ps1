@@ -82,10 +82,9 @@ try
         }
     }
 
-    $python_template_dir = join-path $cloudbaseInitInstallerDir "Python$($pythonversion.replace('.', ''))_${platform}_Template"
+    $python_template_file = join-path $cloudbaseInitInstallerDir "Python$($pythonversion.replace('.', ''))_${platform}_Template.zip"
+    Expand7z $python_template_file (Split-Path $python_dir -Parent)
 
-    CheckCopyDir $python_template_dir $python_dir
-    
     ls "${python_dir}"
 
     # Make sure that we don't have temp files from a previous build

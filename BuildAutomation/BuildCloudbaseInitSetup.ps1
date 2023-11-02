@@ -100,8 +100,6 @@ try
     DownloadFile "https://raw.githubusercontent.com/ader1990/requirements/stable-zed-with-pyyaml601/upper-constraints.txt" "$pwd\upper-constraints.txt"
     $upper_constraints_file = $(Resolve-Path ".\upper-constraints.txt").Path
 
-    ExecRetry { GitClonePull "requirements" "https://github.com/openstack/requirements" "stable-zed-with-pyyaml601"}
-    $upper_constraints_file = $(Resolve-Path ".\requirements\upper-constraints.txt").Path
     $env:PIP_CONSTRAINT = $upper_constraints_file
     $env:PIP_NO_BINARIES = "cloudbase-init"
 

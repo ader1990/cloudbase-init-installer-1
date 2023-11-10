@@ -103,8 +103,9 @@ try
     ExecRetry { PipInstall "pip" -update $true }
     ExecRetry { PipInstall "wheel" -update $true }
 
-    ExecRetry { PullInstall "requirements" "https://github.com/openstack/requirements" "stable/wallaby"}
-    $upper_constraints_file = $(Resolve-Path ".\requirements\upper-constraints.txt").Path
+    DownloadFile "https://raw.githubusercontent.com/openstack/requirements/master/upper-constraints.txt" "$pwd\upper-constraints.txt"
+    $upper_constraints_file = $(Resolve-Path ".\upper-constraints.txt").Path
+
     $env:PIP_CONSTRAINT = $upper_constraints_file
     $env:PIP_NO_BINARIES = "cloudbase-init"
 

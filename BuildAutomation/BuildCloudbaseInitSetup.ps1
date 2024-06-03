@@ -132,6 +132,20 @@ function Install-PythonEmbedded {
         }
         Expand-Archive $pythonInstallerPath -DestinationPath $python_template_dir
 
+        $pythonSourceUrl = "https://github.com/python/cpython/archive/refs/tags/v${pythonVersionInstallerSuffix}.zip"
+        Write-Host "Downloading cpython sources from: ${pythonSourceUrl}"
+        $pythonSourceZipPath = (Join-Path $pwd "cpython.zip")
+        DownloadFile $pythonSourceUrl $pythonSourceZipPath
+        Expand-Archive $pythonSourceZipPath -DestinationPath "$python_template_dir/sources"
+        Move-Item "$python_template_dir/sources/cpython-${pythonVersionInstallerSuffix}/include" "$python_template_dir/"
+        Remove-Item -Force -Recurse "${python_template_dir}/sources" -ErrorAction Stop
+
+        Write-Host "Copy Pyconfig over"
+        Copy-Item "${scriptPath}\..\EmbeddedSrc\IncludePython${pythonVersionInstallerSuffix}\pyconfig.h" "${python_template_dir}/include/"
+
+        Write-Host "Copy libs over"
+        Copy-Item -Recurse -Force "${scriptPath}\..\EmbeddedSrc\LibsPython${pythonVersionInstallerSuffix}-${platform}" "${python_template_dir}/libs"
+
         Write-Host "Installed Python ${pythonVersionInstaller} to ${python_template_dir}"
     }
 }

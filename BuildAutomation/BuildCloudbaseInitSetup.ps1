@@ -12,7 +12,8 @@ Param(
   [string]$InstallerDir = $null,
   [string]$VSRedistDir = "${ENV:ProgramFiles(x86)}\Common Files\Merge Modules",
   [string]$SignTimestampUrl = "http://timestamp.digicert.com?alg=sha256",
-  [switch]$InstallEmbededPython
+  [switch]$InstallEmbededPython,
+  [switch]$RelativePythonDirPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,12 +44,20 @@ $ENV:HOME = $ENV:USERPROFILE
 
 $python_dir = "C:\Python_CloudbaseInit"
 
+$basepath = "C:\build\cloudbase-init"
+if ($RelativePythonDirPath) {
+    $old_python_dir = $python_dir
+    $python_dir = Join-Path $scriptPath "Python_CloudbaseInit"
+    $basepath = Join-path $scriptPath "build\cloudbase-init"
+    Replace-WixRelativePythonDirPath $old_python_dir $python_dir
+}
+
 $ENV:PATH = "$python_dir\;$python_dir\scripts;$ENV:PATH"
 $ENV:PATH += ";$ENV:ProgramFiles (x86)\Git\bin\"
 $ENV:PATH += ";$ENV:ProgramFiles\7-zip\"
 
-$basepath = "C:\build\cloudbase-init"
 CheckDir $basepath
+
 
 function Install-PythonFromInstaller {
     param($python_template_dir)

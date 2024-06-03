@@ -27,7 +27,7 @@ function GitClonePull($path, $url, $branch="master")
 
     if (!(Test-Path -path $path))
     {
-        git clone -b $branch $url
+        git clone -b $branch $url $path
         if ($LastExitCode) { throw "git clone failed" }
         $needspull = $false
     }
@@ -268,6 +268,17 @@ function PatchRelease($project, $version, $gitRef, $gerritUrl, $gerritRef, $file
 {
     $destPath = ".\dist\$project-$version"
     PatchFromGitCommit $project $destPath $gitRef $gerritUrl $gerritRef $filesToPatch
+}
+
+
+function Replace-WixRelativePythonDirPath($oldPath, $newPath) {
+    Get-ChildItem -Filter *.wixproj -Recurse |
+    Foreach-Object {
+        $wixprojfile = $_.FullName
+        (Get-Content $wixprojfile) |
+        Foreach-Object {$_.replace($oldPath, $newPath)} |
+        Set-Content $wixprojfile
+    }
 }
 
 function ExecRetry($command, $maxRetryCount = 10, $retryInterval=2)

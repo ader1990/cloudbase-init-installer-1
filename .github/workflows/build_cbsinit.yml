@@ -1,4 +1,4 @@
-name: Cloudbase-Init build MSI v2
+name: Cloudbase-Init build MSI v3
 
 on: [push, pull_request]
 

@@ -13,9 +13,9 @@ jobs:
         cbsinit_branch: ['add_nocloud_network_tests']
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.1
+      uses: microsoft/setup-msbuild@v2
     - name: Install Windows 8.1 SDK
       run: |
         Invoke-WebRequest -Method Get -Uri https://go.microsoft.com/fwlink/p/?LinkId=323507 -OutFile sdksetup.exe -UseBasicParsing
@@ -29,7 +29,7 @@ jobs:
             -PythonVersion "3.11_9" ^
             -SetVCEnvVars:$true -RelativePythonDirPath:$true ^
             -CloudbaseInitRepoUrl ${{ matrix.cbsinit_repo }} -CloudbaseInitRepoBranch ${{ matrix.cbsinit_branch }}
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v4
       with:
         name: "CloudbaseInit_x64_MSI_${{ matrix.cbsinit_branch }}"
         path: 'CloudbaseInitSetup/bin/release/x64/CloudbaseInitSetup.msi'

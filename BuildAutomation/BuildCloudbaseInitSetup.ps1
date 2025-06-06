@@ -167,6 +167,9 @@ try
 
     $installer_sources_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup"
 
+    cd $cloudbaseInitInstallerDir
+    
+
     if($platform -eq "x64")
     {
         copy "CloudbaseInitSetup\Microsoft_VC140_CRT_x64.msm" $installer_sources_dir
@@ -176,9 +179,7 @@ try
         copy "CloudbaseInitSetup\Microsoft_VC140_CRT_x86.msm" $installer_sources_dir
     }
 
-    cd $cloudbaseInitInstallerDir
-    
-    & msbuild.exe CloudbaseInitSetup.sln /m /p:Platform=$platform /p:Configuration=`"Release`"  /p:DefineConstants=`"PythonSourcePath=$python_dir`;CarbonSourcePath=Carbon`;Version=$msi_version`;VersionStr=$version`"
+& msbuild.exe CloudbaseInitSetup.sln /m /p:Platform=$platform /p:Configuration=`"Release`"  /p:DefineConstants=`"PythonSourcePath=$python_dir`;CarbonSourcePath=Carbon`;Version=$msi_version`;VersionStr=$version`"
     if ($LastExitCode) { throw "MSBuild failed" }
 
     $msi_path = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform\CloudbaseInitSetup.msi"

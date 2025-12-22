@@ -1,4 +1,4 @@
-name: Cloudbase-Init build MSI
+name: Cloudbase-Init build MSI retest
 
 on: [push, pull_request]
 

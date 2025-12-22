@@ -14,8 +14,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildAutomation", "BuildAut
 		BuildAutomation\BuildUtils.ps1 = BuildAutomation\BuildUtils.ps1
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UtilsActions", "UtilsActions\UtilsActions.vcxproj", "{03E4CD9D-2149-424A-9092-9162DE22F105}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -47,3 +45,4 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
+

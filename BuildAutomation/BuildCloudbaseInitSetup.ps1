@@ -29,7 +29,7 @@ if ($platform -eq "x86") {
     $platformVCVarsRequired = "x86"
 }
 
-SetVCVars "2022" $platformVCVarsRequired
+SetVCVars "2019" $platformVCVarsRequired
 
 # Use v140 with GitHub workflows env
 ReplaceVSToolSet $VSPlatformToolSet
@@ -199,3 +199,4 @@ finally
 {
     popd
 }
+

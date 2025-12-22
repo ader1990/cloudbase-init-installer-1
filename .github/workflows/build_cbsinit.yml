@@ -29,7 +29,12 @@ jobs:
             -PythonVersion "3.12_3" ^
             -SetVCEnvVars:$true -RelativePythonDirPath:$true ^
             -CloudbaseInitRepoUrl ${{ matrix.cbsinit_repo }} -CloudbaseInitRepoBranch ${{ matrix.cbsinit_branch }}
+        ls CloudbaseInitSetup\Binaries\x64
     - uses: actions/upload-artifact@v4
       with:
         name: "CloudbaseInit_x64_MSI_${{ matrix.cbsinit_branch }}"
         path: 'CloudbaseInitSetup/bin/release/x64/CloudbaseInitSetup.msi'
+    - uses: actions/upload-artifact@v4
+      with:
+        name: "CloudbaseInit_x64_UtilsActionsDll_${{ matrix.cbsinit_branch }}"
+        path: 'CloudbaseInitSetup/Binaries/x64/UtilsActions.dll'

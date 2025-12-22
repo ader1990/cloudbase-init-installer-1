@@ -27,12 +27,13 @@ jobs:
         powershell.exe .\BuildAutomation\BuildCloudbaseInitSetup.ps1 ^
             -ClonePullInstallerRepo:$false -CreateZip:$false ^
             -PythonVersion "3.12_3" ^
+            -Platform "x86" ^
             -SetVCEnvVars:$true -RelativePythonDirPath:$true ^
             -CloudbaseInitRepoUrl ${{ matrix.cbsinit_repo }} -CloudbaseInitRepoBranch ${{ matrix.cbsinit_branch }}
     - name: list files
       shell: powershell
       run: |
-        ls CloudbaseInitSetup\Binaries\x64
+        ls CloudbaseInitSetup\Binaries\x86
     - uses: actions/upload-artifact@v4
       with:
         name: "CloudbaseInit_x64_MSI_${{ matrix.cbsinit_branch }}"
@@ -40,4 +41,4 @@ jobs:
     - uses: actions/upload-artifact@v4
       with:
         name: "CloudbaseInit_x64_UtilsActionsDll_${{ matrix.cbsinit_branch }}"
-        path: 'CloudbaseInitSetup/Binaries/x64/UtilsActions.dll'
+        path: 'CloudbaseInitSetup/Binaries/x86/UtilsActions.dll'
